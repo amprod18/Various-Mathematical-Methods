@@ -4,6 +4,7 @@ set title "Montecarlo Integration Method Convergence"
 set xlabel "N"
 set ylabel "Stardard Deviation"
 set grid
+set logscale xy
 
 file = "Montecarlo_Integration_res.dat"
 

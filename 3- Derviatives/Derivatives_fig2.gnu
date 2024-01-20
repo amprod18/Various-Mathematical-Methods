@@ -4,7 +4,7 @@ set autoscale
 set ylabel "-exp(-x)"
 set xlabel "x"
 set grid
-set title "Derivative with Different Methods"
+set title "Second Derivative with Different Methods"
 set key left top
 
 file = 'Derivatives_res.dat'

@@ -213,11 +213,8 @@ subroutine EulerMethod(ndades, step, phi0, omega_0, phi, omega, func)
     implicit none
 
     integer :: i, ndades
-    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step, g, l
+    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step
     external :: func
-
-    l = 0.45_dp ! m
-    g = 3.71_dp ! m/s^2
 
     ! Euler Method: y_n = y_n-1 + h*f_n-1
     ! We got two eqs -> phi = omega; alpha = -g·sin(phi)/l (see angular_accel for deduction)
@@ -237,11 +234,8 @@ subroutine EnhancedEulerMethod(ndades, step, phi0, omega_0, phi, omega, func)
     implicit none
 
     integer :: i, ndades
-    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step, g, l
+    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step
     external :: func
-
-    l = 0.45_dp ! cm
-    g = 3.71_dp ! m/s^2
     
     ! Euler Method+: y_n = y_n-2 + 2*h*f_n-1
     ! We got two eqs -> phi = omega; alpha = -g·sin(phi)/l (see angular_accel for deduction)
@@ -266,11 +260,8 @@ subroutine Adams_Bashforth(ndades, step, phi0, omega_0, phi, omega, func)
     implicit none
 
     integer :: i, ndades
-    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step, g, l
+    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step
     external :: func
-
-    l = 0.45_dp ! cm
-    g = 3.71_dp ! m/s^2
 
     ! Adams-Bashforth: y_n = y_n-1 + h*f_n-2 / 2 + 3*h*f_n-1 / 2
     ! We got two eqs -> phi = omega; alpha = -g·sin(phi)/l (see angular_accel for deduction)
@@ -295,11 +286,8 @@ subroutine Adams_3p(ndades, step, phi0, omega_0, phi, omega, func)
     implicit none
 
     integer :: i, ndades
-    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step, g, l
+    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step
     external :: func
-
-    l = 0.45_dp ! cm
-    g = 3.71_dp ! m/s^2
 
     ! Adams-Bashforth: y_n = y_n-1 + h*f_n-2 / 2 + 3*h*f_n-1 / 2
     ! We got two eqs -> phi = omega; alpha = -g·sin(phi)/l (see angular_accel for deduction)
@@ -328,11 +316,8 @@ subroutine Adams_4p(ndades, step, phi0, omega_0, phi, omega, func)
     implicit none
 
     integer :: i, ndades
-    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step, g, l
+    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step
     external :: func
-
-    l = 0.45_dp ! cm
-    g = 3.71_dp ! m/s^2
 
     ! Adams-Bashforth: y_n = y_n-1 + h*f_n-2 / 2 + 3*h*f_n-1 / 2
     ! We got two eqs -> phi = omega; alpha = -g·sin(phi)/l (see angular_accel for deduction)
@@ -366,11 +351,8 @@ subroutine Adams_Moulton(ndades, step, phi0, omega_0, phi, omega, func)
     implicit none
 
     integer :: i, ndades
-    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step, g, l, phi_p, omega_p
+    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step, phi_p, omega_p
     external :: func
-
-    l = 0.45_dp ! cm
-    g = 3.71_dp ! m/s^2
 
     ! Adams-Bashforth: y_n = y_n-1 + h*f_n-2 / 2 + 3*h*f_n-1 / 2
     ! We got two eqs -> phi = omega; alpha = -g·sin(phi)/l (see angular_accel for deduction)
@@ -411,12 +393,9 @@ subroutine Hamming(ndades, step, phi0, omega_0, phi, omega, func)
     implicit none
 
     integer :: i, ndades
-    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step, g, l, phi_p, omega_p, phi_m, omega_m, phi_c, omega_c, &
+    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step, phi_p, omega_p, phi_m, omega_m, phi_c, omega_c, &
                phi_p_prev, omega_p_prev, phi_c_prev, omega_c_prev
     external :: func
-
-    l = 0.45_dp ! cm
-    g = 3.71_dp ! m/s^2
 
     ! Adams-Bashforth: y_n = y_n-1 + h*f_n-2 / 2 + 3*h*f_n-1 / 2
     ! We got two eqs -> phi = omega; alpha = -g·sin(phi)/l (see angular_accel for deduction)
