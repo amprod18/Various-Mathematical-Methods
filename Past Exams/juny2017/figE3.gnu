@@ -2,7 +2,7 @@ set terminal png size 1920, 1080; set output "figE3.png"
 
 set title "RK4 Prevalence over Time"
 set grid
-set logscale y
+set logscale yx
 
 
 file = "res.dat"

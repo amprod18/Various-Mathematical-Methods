@@ -51,52 +51,63 @@ subroutine simulate_epidemic(N, infected, t_max, people, p)
     use, intrinsic :: iso_fortran_env, only : dp => real64
     implicit none
     
-    integer :: N, index, index2, status, infected, people(N)
+    integer :: N, i, index, index2, status, infected, people(N)
     real(dp) :: x, t_max, p, step, t, step_c, prev
     write(1, *) '# Simulation with N=', N, 'and p=', p
     t = 0._dp
     status = 0
     step_c = 0._dp
+    i = 0
     do while (t .le. t_max)
+        i = i+1
+        ! print *, people
         do while (status .ne. 1)
             call random_number(x)
-            index = ceiling(x*N)
+            index = floor(x*(N-1) + 1)
             status = people(index)
         end do
+        index2 = index
         status = 0
         call random_number(x)
         if (x .le. p) then
             people(index) = 0
             infected = infected - 1
         else
-            do while (index2 .ne. index)
+            do while (index2 .eq. index)
                 call random_number(x)
-                index2 = ceiling(x*N)
+                index2 = floor(x*(N-1) + 1)
             end do
             if (people(index2) .eq. 0) then
                 people(index2) = 1
                 infected = infected + 1
             end if
         end if 
+        if (infected .lt. 2) then
+            write(1, '(2f20.14)') t, 0._dp
+            exit
+        end if
         step = p/real(infected, dp)
         step_c = step_c + step
         t = t + step
         prev = real(infected, dp)/real(N, dp)
-
+        
         if (step_c .ge. 0.01_dp) then
             write(1, '(2f20.14)') t, prev
-            step_c = 0
+            step_c = 0._dp
         end if
+        
     end do
     write(1, *) ' '
     write(1, *) ' '
+
+    print *, 'Ended Pandemic in', i, ' iterations'
 end subroutine simulate_epidemic
 
 subroutine update_ki(nequs, x, y, ki, func)
     use, intrinsic :: iso_fortran_env, only : dp => real64
     implicit none
 
-    integer :: i, nequs
+    integer :: nequs
     real(dp) :: x, y, func, ki(nequs)
 
     ki(nequs) = func(x, y)
@@ -109,8 +120,6 @@ subroutine RungeKutta4order(n_points, step, y0, y, p, func)
     integer :: n_points, i
     real(dp):: step, k1, k2, k3, k4, y0, y(n_points), func, p
     external :: func
-
-    ! We got two eqs -> phi' = omega; alpha = 2·phi(x)·[V(x) - E] (see schrodinger_eq for deduction)
     
     ! --- RK4 ---
     ! k1 = f(x0, y0)
