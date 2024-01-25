@@ -2,7 +2,7 @@ program Integration_Methods
     use, intrinsic :: iso_fortran_env, only: sp=>real32, dp=>real64
     implicit none
 
-    real(dp) :: AT, AS, AS38, AB, ART, ARS, ARB, Areal, xini, xend, a, b, h, pi, YKohoutek
+    real(dp) :: AT, AS, AS38, AB, ARB, Areal, xini, xend, a, b, h, pi, YKohoutek
     integer :: i
     external :: YKohoutek
 
@@ -15,19 +15,18 @@ program Integration_Methods
     open(1, file="Integration_Methods_res.dat")
 
     Areal = a * b * (3._dp * sqrt(3._dp) + 2._dp * pi) / 24._dp
-    do i = 2, 20, 2
+    print *, Areal
+    do i = 3, 20, 2
         h = (xend - xini) / real(2 ** i, dp)
         call trapezi(xini, xend, i, AT, YKohoutek)
         call simpson(xini, xend, i, AS, YKohoutek)
         call simpsontresvuit(xini, xend, i, AS38, YKohoutek)
         call boole(xini, xend, i, AB, YKohoutek)
-        call repeated_trapezoids(xini, xend, i, ART, YKohoutek)
-        call repeated_simpson(xini, xend, i, ARS, YKohoutek)
         call romberg(xini, xend, i, ARB, YKohoutek)
 
-        write(1, "(15f20.12)") h, abs(AT - Areal), abs(AS - Areal), abs(AS38 - Areal), abs(AB - Areal), abs(ART - Areal), &
-                                  abs(ARS - Areal), abs(ARB - Areal), AT/Areal, AS/Areal, AS38/Areal, AB/Areal, ART/Areal, &
-                                  ARS/Areal, ARB/Areal 
+        write(1, *) h, abs(AT - Areal), abs(AS - Areal), abs(AS38 - Areal), abs(AB - Areal), &
+                       abs(ARB - Areal), AT/Areal, AS/Areal, AS38/Areal, AB/Areal, ARB/Areal
+                                   
     end do
 
     close(1)
@@ -50,7 +49,7 @@ subroutine trapezi(xini, xend, m, AS, funcio)
 
     do i = 1, n_iter
         a = real(i - 1, dp) * step + xini
-        b = a + step
+        b = real(i, dp) * step + xini
         ! print *, "Trapezi:", b
 
         fa = funcio(a)
@@ -64,123 +63,78 @@ subroutine simpson(xini, xend, m, AS, funcio)
     use, intrinsic :: iso_fortran_env, only: sp=>real32, dp=>real64
     implicit none
 
-    real(dp) :: AS, fa, fb, fc, a, b, c, step, xini, xend, funcio
+    real(dp) :: AS, a, fa, step, xini, xend, funcio
     integer :: n_iter, i, m
 
     n_iter = 2 ** m
     step = (xend - xini) / real(n_iter, dp)
-    AS = 0._dp
+    AS = funcio(xini) + funcio(xend)
 
-    do i = 1, n_iter - 1, 2
-        a = real(i - 1, dp) * step + xini
-        b = a + step
-        c = a + 2 * step
-        ! print *, "Simpson:", c
-
-        fa = funcio(a)
-        fb = funcio(b)
-        fc = funcio(c)
-
-        AS = AS + step * (fa + 4*fb + fc) / 3._dp
+    do i = 1, n_iter - 1
+        a = real(i, dp) * step + xini
+        if (mod(i, 2) .eq. 0) then
+            fa = funcio(a)
+            AS = AS + 2 * fa
+        else
+            fa = funcio(a)
+            AS = AS + 4 * fa
+        end if
     end do
+    AS = step * AS / 3._dp
 end subroutine simpson
 
-subroutine simpsontresvuit(xini, xend, m, AS, funcio)
+subroutine simpsontresvuit(xini, xend, m, AS, fun)
     use, intrinsic :: iso_fortran_env, only: sp=>real32, dp=>real64
     implicit none
 
-    real(dp) :: AS, fa, fb, fc, fd, a, b, c, d, step, xini, xend, funcio
-    integer :: n_iter, i, m
-
-    n_iter = 2 ** m
-    step = (xend - xini) / real(n_iter, dp)
-    AS = 0._dp
-
-    do i = 1, n_iter - 2, 3
-        a = real(i - 1, dp) * step + xini
-        b = a + step
-        c = a + 2 * step
-        d = c + 3 * step
-        ! print *, "3/8:", d
-
-        fa = funcio(a)
-        fb = funcio(b)
-        fc = funcio(c)
-        fd = funcio(d)
-
-        AS = AS + 3 * step * (fa + 3*(fb + fc) + fd) / 8._dp
+    integer :: i, m, k, k2
+    real(dp) :: xini, xend, AS, fun, step
+    
+    k = 2**m
+    k2 = ((k+2)/3)*3
+    step = (xend-xini) / real(k2, dp)
+    
+    AS = fun(xini) + fun(xend)
+    do i = 1, (k2 - 2), 3
+        AS = AS + 3._dp*fun(xini + step*real(i, dp))
     end do
+    do i = 2, (k2 - 1), 3
+        AS = AS + 3._dp*fun(xini + step*real(i, dp))
+    end do
+    do i = 3, (k2 - 3), 3
+        AS = AS + 2._dp*fun(xini + step*real(i, dp))
+    end do
+    AS = 3._dp*step*AS/8._dp
 end subroutine simpsontresvuit
 
 subroutine boole(xini, xend, m, AS, funcio)
     use, intrinsic :: iso_fortran_env, only: sp=>real32, dp=>real64
     implicit none
 
-    real(dp) :: AS, fa, fb, fc, fd, fe, a, b, c, d, e, step, xini, xend, funcio
+    real(dp) :: AS, a, fa, step, xini, xend, funcio
     integer :: n_iter, i, m
 
-    n_iter = 2 ** m
+    n_iter = ((2**m + 3)/4)*4
     step = (xend - xini) / real(n_iter, dp)
-    AS = 0._dp
+    AS = 7._dp*(funcio(xini) + funcio(xend))
 
-    do i = 1, n_iter - 4, 4
-        a = real(i - 1, dp) * step + xini
-        b = a + step
-        c = a + 2 * step
-        d = c + 3 * step
-        e = c + 4 * step
-        ! print *, "Boole:", e
-
+    do i = 1, n_iter - 1, 2
+        a = real(i, dp) * step + xini
         fa = funcio(a)
-        fb = funcio(b)
-        fc = funcio(c)
-        fd = funcio(d)
-        fe = funcio(e)
-
-        AS = AS + 2 * step * (7*(fa + fe) + 32*(fb + fd) + 12*fc) / 45._dp
+        AS = AS + 32 * fa
     end do
+    do i = 2, n_iter - 2, 4
+        a = real(i, dp) * step + xini
+        fa = funcio(a)
+        AS = AS + 12 * fa
+    end do
+    do i = 4, n_iter - 4, 4
+        a = real(i, dp) * step + xini
+        fa = funcio(a)
+        AS = AS + 14 * fa
+    end do
+    AS = 2 * step * AS / 45._dp
 end subroutine boole
-
-! -------------------- Repeated Integration Methods --------------------
-subroutine repeated_trapezoids(xini, xend, m, AS, funcio)
-    use, intrinsic :: iso_fortran_env, only: sp=>real32, dp=>real64
-    implicit none
-
-    real(dp) :: AS, step, xini, xend, funcio
-    integer :: n_iter, i, m
-
-    n_iter = 2 ** m
-    step = (xend - xini) / real(n_iter, dp)
-    AS = 0._dp
-    AS = AS + (funcio(xini) + funcio(xend))/2._dp
-
-    do i = 2, n_iter - 2
-        AS = AS + funcio(xini + real(i - 1, dp) * step)
-    end do
-    AS = step * AS
-end subroutine repeated_trapezoids
-
-subroutine repeated_simpson(xini, xend, m, AS, funcio)
-    use, intrinsic :: iso_fortran_env, only: sp=>real32, dp=>real64
-    implicit none
-
-    real(dp) :: AS, step, xini, xend, funcio
-    integer :: n_iter, i, m
-
-    n_iter = 2 ** m + 1 ! Needs to be even
-    step = (xend - xini) / real(n_iter, dp)
-    AS = 0._dp
-    AS = AS + funcio(xini) + funcio(xend)
-
-    do i = 2, n_iter - 2
-        if (mod(i, 2) .eq. 0) then
-            AS = AS + 4._dp * funcio(xini + real(i - 1, dp) * step)
-        else
-            AS = AS + 2._dp * funcio(xini + real(i - 1, dp) * step)
-        end if
-    end do
-    AS = step * AS / 3._dp
-end subroutine repeated_simpson
 
 subroutine romberg(xini, xend, m, AS, funcio)
     use, intrinsic :: iso_fortran_env, only: sp=>real32, dp=>real64
@@ -189,17 +143,16 @@ subroutine romberg(xini, xend, m, AS, funcio)
     real(dp) :: AS, xini, xend, funcio, prev_col(m + 1), cur_col(m + 1)
     integer :: i, j, m
     external :: funcio
-
-    AS = 0._dp
-
+    
     do i = 0, m
-        call trapezi(xini, xend, i, AS, funcio)
+        AS = 0._dp
+        call trapezi(xini, xend, i+1, AS, funcio)
         prev_col(i+1) = AS
     end do
 
     do i = 1, m
         do j = 1, m - i + 1
-            cur_col(j) = (4**i * prev_col(j+1) - prev_col(j)) / (4**i - 1)
+            cur_col(j) = (4._dp**i * prev_col(j+1) - prev_col(j)) / real(4**i - 1, dp)
         end do
 
         do j = 1, m - i + 1

@@ -152,8 +152,8 @@ subroutine second_derivate(n_points, x, dfunc, func)
     real(dp) :: x(n_points), dfunc(n_points), func, step
     
     step = x(2) - x(1)
-    dfunc(1) = (func(x(3)) + func(x(1)) - 2*func(x(2))) / (step**2)
-    dfunc(n_points) = (func(x(n_points)) + func(x(n_points - 2)) - 2*func(x(n_points - 1))) / (step**2)
+    dfunc(1) = (2*func(x(1)) - 5*func(x(2)) + 4*func(x(3)) - func(x(4))) / (step**2)
+    dfunc(n_points) = (2*func(x(n_points)) - 5*func(x(n_points - 1)) + 4*func(x(n_points - 2)) - func(x(n_points - 3))) / (step**2)
     do i = 2, n_points - 1
         dfunc(i) = (func(x(i + 1)) + func(x(i - 1)) - 2*func(x(i))) / (step**2)
     end do

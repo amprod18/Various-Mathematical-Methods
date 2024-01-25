@@ -3,10 +3,10 @@ program Root_Finding
     implicit none
 
     integer :: i, n_points, n_iter_b, n_iter_r
-    real(dp) :: a, epsilon, preci, Dmax_b, Dmax_r, xmax, ymax, E0, E1, Th, pi, E_D_max_b, E_D_max_r, &
+    real(dp) :: a, epsilon, preci, Dmax_b, Dmax_r, xmax, ymax, E0, E1, Th, pi, E_D_max_b, E_D_max_r, excentricity, &
                 E_min, E_max, xmax_n, ymax_n, xmax_s, ymax_s
     real(dp), allocatable :: convergence_n(:), convergence_s(:), x(:), y(:), E(:), D(:), dD(:), t(:)
-    external :: fun, fun2
+    external :: fun1, fun2, excentricity
 
     pi = acos(-1._dp)
     a = 189.857_dp
@@ -46,10 +46,10 @@ program Root_Finding
     n_iter_r = 1000
 
     write(1, *) '# Distance Maxima'
-    call biseccio(fun, E_min, E_max, preci, n_iter_b, E_D_max_b)
+    call biseccio(fun1, E_min, E_max, preci, n_iter_b, E_D_max_b)
     call distance(a, epsilon, E_D_max_b, Dmax_b, xmax, ymax)
 
-    call regula_falsi(fun, E_min, E_max, preci, n_iter_r, E_D_max_r)
+    call regula_falsi(fun1, E_min, E_max, preci, n_iter_r, E_D_max_r)
     call distance(a, epsilon, E_D_max_r, Dmax_r, xmax, ymax)
 
     print *, E_D_max_b, Dmax_b, n_iter_b
@@ -82,7 +82,7 @@ program Root_Finding
         call distance(a, epsilon, convergence_n(n_iter_r), Dmax_r, xmax_n, ymax_n)
 
         ! Doesn't need known derivate (in fun2)
-        call secant_method(fun2, E0, E1, preci, n_iter_b, convergence_s, Th, epsilon, t(i))
+        call secant(excentricity, E0, E1, preci, n_iter_b, convergence_s, Th, epsilon, t(i))
         call distance(a, epsilon, convergence_s(n_iter_b), Dmax_b, xmax_s, ymax_s)
 
         write(1, *) t(i), convergence_n(n_iter_r), xmax_n, ymax_n, convergence_s(n_iter_b), xmax_s, ymax_s
@@ -100,7 +100,7 @@ program Root_Finding
     call system('gnuplot -p Root_Methods_fig4.gnu')
 end program Root_Finding
 
-subroutine fun(x, preci, valorf, valordf)
+subroutine fun1(x, preci, valorf, valordf)
     ! Subroutine that returns the function and its corresponding derivate evaluated in the desired point
     use, intrinsic :: iso_fortran_env, only: sp=>real32, dp=>real64
     implicit none
@@ -108,7 +108,7 @@ subroutine fun(x, preci, valorf, valordf)
 
     valorf = f(x)
     valordf = (f(x + preci) - f(x - preci)) / (2._dp * preci)
-end subroutine fun
+end subroutine fun1
 
 function f(x) result(fres)
     ! Test function to apply the afforementioned root retrieval methods
@@ -197,18 +197,15 @@ subroutine biseccio(fun, A, B, preci, n_iter, root)
             print *, "Bisection method fails in the interval [", A, ", ", B, "]"
             return
         end if
-
         if (fc .EQ. 0.) then
             root = C
             return
         end if
-
         if (fa * fc < 0) then
             B = C
         else
             A = C
         end if
-
         if (diff < preci) then
             n_iter = i
             root = C
@@ -239,18 +236,15 @@ subroutine regula_falsi(fun, A, B, preci, n_iter, root)
             print *, "Regula-Falsi method fails in the interval [", A, ", ", B, "]"
             return
         end if
-
         if (fc .EQ. 0.) then
             root = C
             return
         end if
-
         if (fa * fc < 0) then
             B = C
         else
             A = C
         end if
-
         if (diff < preci) then
             n_iter = i
             root = C
@@ -282,28 +276,23 @@ subroutine newton_raphson(fun, xini, preci, n_iter, root, Th, epsilon, t)
     error = abs(fx / dfx) ! Not in Use
 end subroutine newton_raphson
 
-subroutine secant_method(fun, xini1, xini2, preci, n_iter, root, Th, epsilon, t)
-    ! Subroutine that implements the Newton-Raphson method to retrieve a solution of a funtion (f(x) = 0) 
+subroutine secant(fun, xini1, xini2, preci, n_iter, root, Th, epsilon, t)
     use, intrinsic :: iso_fortran_env, only: sp=>real32, dp=>real64
     implicit none
-    real(dp) :: xini1, xini2, preci, xn, xn_1, fx, fx_1, dfx, error, Th, epsilon, t
-    integer :: n_iter, i
-    real(dp) :: root(n_iter)
-    external :: fun
 
-    xn = xini1
-    xn_1 = xini2
-    do i = 1, n_iter
-        fx_1 = fx
-        call fun(xn, fx, dfx, Th, epsilon, t)
-        dfx = (xn - xn_1) / (fx - fx_1)
-        root(i) = xn
-        if (abs(fx / dfx) < preci) then
-            exit
-        end if
+    real(dp) :: xini1, xini2, preci, xn, xn_1, Th, epsilon, t, fun
+    integer :: n_iter, max_iter
+    real(dp) :: root(n_iter)
+    max_iter = 10000
+
+    xn_1 = xini1
+    xn = xini2
+    root(1) = xn - fun(t, Th, epsilon, xn)*(xn-xn_1)/(fun(t, Th, epsilon, xn)-fun(t, Th, epsilon, xn_1))
+    n_iter = 1
+    do while ((abs(root(n_iter)-xn).gt.preci).and.(n_iter .lt. max_iter))
         xn_1 = xn
-        xn = xn - fx / dfx
+        xn = root(n_iter)
+        n_iter = n_iter + 1
+        root(n_iter) = xn - fun(t, Th, epsilon, xn)*(xn-xn_1)/(fun(t, Th, epsilon, xn)-fun(t, Th, epsilon, xn_1))
     end do
-    n_iter = i
-    error = abs(fx / dfx) ! Not in Use
-end subroutine secant_method
+end subroutine secant

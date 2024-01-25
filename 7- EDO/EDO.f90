@@ -208,12 +208,12 @@ program EDO
 end program EDO
 
 ! ---------------------- EDO Solving Methods ----------------------
-subroutine EulerMethod(ndades, step, phi0, omega_0, phi, omega, func)
+subroutine EulerMethod(n_points, step, phi0, omega_0, phi, omega, func)
     use, intrinsic :: iso_fortran_env, only : dp => real64
     implicit none
 
-    integer :: i, ndades
-    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step
+    integer :: i, n_points
+    real(dp):: phi0, omega_0, phi(n_points), omega(n_points), func, step
     external :: func
 
     ! Euler Method: y_n = y_n-1 + h*f_n-1
@@ -223,18 +223,18 @@ subroutine EulerMethod(ndades, step, phi0, omega_0, phi, omega, func)
     phi(1) = phi0 + step * omega_0 ! f_n = p; y_n = phi
     omega(1) = omega_0 + step * func(phi0) ! f_n = p' = -g * sin(phi) / l; y_n = p = phi'
 
-    do i = 2, ndades
+    do i = 2, n_points
         phi(i) = phi(i - 1) + step * omega(i - 1) ! f_n = p; y_n = phi
         omega(i) = omega(i - 1) + step * func(phi(i - 1)) ! f_n = p' = -g * sin(phi) / l; y_n = p = phi'
     end do
 end subroutine EulerMethod
 
-subroutine EnhancedEulerMethod(ndades, step, phi0, omega_0, phi, omega, func)
+subroutine EnhancedEulerMethod(n_points, step, phi0, omega_0, phi, omega, func)
     use, intrinsic :: iso_fortran_env, only : dp => real64
     implicit none
 
-    integer :: i, ndades
-    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step
+    integer :: i, n_points
+    real(dp):: phi0, omega_0, phi(n_points), omega(n_points), func, step
     external :: func
     
     ! Euler Method+: y_n = y_n-2 + 2*h*f_n-1
@@ -249,18 +249,18 @@ subroutine EnhancedEulerMethod(ndades, step, phi0, omega_0, phi, omega, func)
     phi(2) = phi0 + 2 * step * omega(1)
     omega(2) = omega_0 + 2 * step * func(phi(1))
 
-    do i = 3, ndades
+    do i = 3, n_points
         phi(i) = phi(i - 2) + 2 * step * omega(i - 1)
         omega(i) = omega(i - 2) + 2 * step * func(phi(i - 1))
     end do
 end subroutine EnhancedEulerMethod
 
-subroutine Adams_Bashforth(ndades, step, phi0, omega_0, phi, omega, func)
+subroutine Adams_Bashforth(n_points, step, phi0, omega_0, phi, omega, func)
     use, intrinsic :: iso_fortran_env, only : dp => real64
     implicit none
 
-    integer :: i, ndades
-    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step
+    integer :: i, n_points
+    real(dp):: phi0, omega_0, phi(n_points), omega(n_points), func, step
     external :: func
 
     ! Adams-Bashforth: y_n = y_n-1 + h*f_n-2 / 2 + 3*h*f_n-1 / 2
@@ -275,18 +275,18 @@ subroutine Adams_Bashforth(ndades, step, phi0, omega_0, phi, omega, func)
     phi(2) = phi(1) + 3 * step * omega(1) / 2._dp - step * omega_0 / 2._dp
     omega(2) = omega(1) + 3 * step * func(phi(1)) / 2._dp - step * func(phi0) / 2._dp
 
-    do i = 3, ndades
+    do i = 3, n_points
         phi(i) = phi(i - 1) + step*(3 * omega(i - 1) - omega(i - 2)) / 2._dp
         omega(i) = omega(i - 1) + step*(3 * func(phi(i - 1)) - func(phi(i - 2))) / 2._dp
     end do
 end subroutine Adams_Bashforth
 
-subroutine Adams_3p(ndades, step, phi0, omega_0, phi, omega, func)
+subroutine Adams_3p(n_points, step, phi0, omega_0, phi, omega, func)
     use, intrinsic :: iso_fortran_env, only : dp => real64
     implicit none
 
-    integer :: i, ndades
-    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step
+    integer :: i, n_points
+    real(dp):: phi0, omega_0, phi(n_points), omega(n_points), func, step
     external :: func
 
     ! Adams-Bashforth: y_n = y_n-1 + h*f_n-2 / 2 + 3*h*f_n-1 / 2
@@ -305,18 +305,18 @@ subroutine Adams_3p(ndades, step, phi0, omega_0, phi, omega, func)
     phi(3) = phi(2) + step * (23 * omega(2) - 16 * omega(1) + 5 * omega_0) / 12._dp
     omega(3) = omega(2) + step * (23 * func(phi(2)) - 16 * func(phi(1)) + 5 * func(phi0)) / 12._dp
 
-    do i = 4, ndades
+    do i = 4, n_points
         phi(i) = phi(i - 1) + step * (23 * omega(i - 1) - 16 * omega(i - 2) + 5 * omega(i - 3)) / 12._dp
         omega(i) = omega(i - 1) + step * (23 * func(phi(i - 1)) - 16 * func(phi(i - 2)) + 5 * func(phi(i - 3))) / 12._dp
     end do
 end subroutine Adams_3p
 
-subroutine Adams_4p(ndades, step, phi0, omega_0, phi, omega, func)
+subroutine Adams_4p(n_points, step, phi0, omega_0, phi, omega, func)
     use, intrinsic :: iso_fortran_env, only : dp => real64
     implicit none
 
-    integer :: i, ndades
-    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step
+    integer :: i, n_points
+    real(dp):: phi0, omega_0, phi(n_points), omega(n_points), func, step
     external :: func
 
     ! Adams-Bashforth: y_n = y_n-1 + h*f_n-2 / 2 + 3*h*f_n-1 / 2
@@ -339,19 +339,19 @@ subroutine Adams_4p(ndades, step, phi0, omega_0, phi, omega, func)
     phi(4) = phi(3) + step * (55 * omega(3) - 59 * omega(2) + 37 * omega(1) - 9 * omega_0) / 24._dp
     omega(4) = omega(3) + step * (55 * func(phi(3)) - 59 * func(phi(2)) + 37 * func(phi(1)) - 9 * func(phi0)) / 24._dp
 
-    do i = 5, ndades
+    do i = 5, n_points
         phi(i) = phi(i - 1) + step * (55 * omega(i - 1) - 59 * omega(i - 2) + 37 * omega(i - 3) - 9 * omega(i - 4)) / 24._dp
         omega(i) = omega(i - 1) + step * (55 * func(phi(i - 1)) - 59 * func(phi(i - 2)) + 37 * func(phi(i - 3)) &
                    - 9 * func(phi(i - 4))) / 24._dp
     end do
 end subroutine Adams_4p
 
-subroutine Adams_Moulton(ndades, step, phi0, omega_0, phi, omega, func)
+subroutine Adams_Moulton(n_points, step, phi0, omega_0, phi, omega, func)
     use, intrinsic :: iso_fortran_env, only : dp => real64
     implicit none
 
-    integer :: i, ndades
-    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step, phi_p, omega_p
+    integer :: i, n_points
+    real(dp):: phi0, omega_0, phi(n_points), omega(n_points), func, step, phi_p, omega_p
     external :: func
 
     ! Adams-Bashforth: y_n = y_n-1 + h*f_n-2 / 2 + 3*h*f_n-1 / 2
@@ -377,7 +377,7 @@ subroutine Adams_Moulton(ndades, step, phi0, omega_0, phi, omega, func)
     phi(4) = phi(3) + step * (9 * omega_p + 19 * omega(3) - 5 * omega(2) + omega(1)) / 24._dp
     omega(4) = omega(3) + step * (9 * func(phi_p) + 19 * func(phi(3)) - 5 * func(phi(2)) + func(phi(1))) / 24._dp
 
-    do i = 5, ndades
+    do i = 5, n_points
         phi_p = phi(i - 1) + step * (55 * omega(i - 1) - 59 * omega(i - 2) + 37 * omega(i - 3) - 9 * omega(i - 4)) / 24._dp
         omega_p = omega(i - 1) + step * (55 * func(phi(i - 1)) - 59 * func(phi(i - 2)) + 37 * func(phi(i - 3)) &
                   - 9 * func(phi(i - 4))) / 24._dp
@@ -388,12 +388,12 @@ subroutine Adams_Moulton(ndades, step, phi0, omega_0, phi, omega, func)
     end do
 end subroutine Adams_Moulton
 
-subroutine Hamming(ndades, step, phi0, omega_0, phi, omega, func)
+subroutine Hamming(n_points, step, phi0, omega_0, phi, omega, func)
     use, intrinsic :: iso_fortran_env, only : dp => real64
     implicit none
 
-    integer :: i, ndades
-    real(dp):: phi0, omega_0, phi(ndades), omega(ndades), func, step, phi_p, omega_p, phi_m, omega_m, phi_c, omega_c, &
+    integer :: i, n_points
+    real(dp):: phi0, omega_0, phi(n_points), omega(n_points), func, step, phi_p, omega_p, phi_m, omega_m, phi_c, omega_c, &
                phi_p_prev, omega_p_prev, phi_c_prev, omega_c_prev
     external :: func
 
@@ -426,7 +426,7 @@ subroutine Hamming(ndades, step, phi0, omega_0, phi, omega, func)
     phi(4) = phi_c
     omega(4) = omega_c
 
-    do i = 5, ndades
+    do i = 5, n_points
         phi_p = phi(i - 4) + 4 * step * (2 * omega(i - 1) - omega(i - 2) + 2 * omega(i - 3)) / 3._dp
         omega_p = omega(i - 4) + 4 * step * (2 * func(phi(i - 1)) - func(phi(i - 2)) + 2 * func(phi(i - 3))) / 3._dp
 
